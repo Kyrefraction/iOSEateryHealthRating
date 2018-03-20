@@ -1,5 +1,5 @@
 //
-//  MyBusinessTableViewCell.swift
+//  myBusinessTableViewCell.swift
 //  Assignment
 //
 //  Created by Vincenzo Scialpi-Sullivan on 05/03/2018.
@@ -8,12 +8,10 @@
 
 import UIKit
 
-class MyBusinessTableViewCell: UITableViewCell {
+class myBusinessTableViewCell: UITableViewCell {
     
-    @IBOutlet weak var ratingImageSearch: UIImageView!
-    @IBOutlet weak var businessNameLabelSearch: UILabel!
     @IBOutlet weak var ratingImage: UIImageView!
-    @IBOutlet weak var businessNameLabel: UILabel!
+    @IBOutlet weak var companyName: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()

@@ -15,87 +15,118 @@ class CompanyDetailsViewController: UIViewController, MKMapViewDelegate { // Thi
     @IBOutlet weak var myDetailsMapView: MKMapView! // IBOutlet for the mapview
     @IBOutlet weak var companyDetails: UILabel! // IBOutlet to show all the information, this is done as one label with newlines (\n) written in the string for simplicity's sake
     var currentCompany: Company? // the current company object, which is an instantiation of the "Company" class
+    var currentCompanySearched: CompanyName?
+    var comingFromSearch: Int = 0
+    var personLatitude: String = ""
+    var personLongitude: String = ""
     override func viewDidLoad() {
         super.viewDidLoad()
         myDetailsMapView.delegate = self
         
-        var companyLat: Double // get the coordinates of company that is being displayed
-        var companyLong: Double
-        let latString: String = (currentCompany?.Latitude)!
-        let longString: String = (currentCompany?.Longitude)!
-        companyLat = (Double(latString)!)
-        companyLong = (Double(longString)!)
-        
-        var personLatitude: String
-        var personLongitude: String
-        
-        let sourceLocation = CLLocationCoordinate2D(latitude: 53.47212, longitude: -2.239928)
-        let desinationLocation = CLLocationCoordinate2D(latitude: companyLat, longitude: companyLong)
-        
-        let sourcePlacemark = MKPlacemark(coordinate: sourceLocation, addressDictionary: nil)
-        let destinationPlacemark = MKPlacemark(coordinate: desinationLocation, addressDictionary: nil)
-        
-        let sourceMapItem = MKMapItem(placemark: sourcePlacemark)
-        let destinationMapItem = MKMapItem(placemark: destinationPlacemark)
-        
-        let sourceAnnotation = customPin()
-        sourceAnnotation.title = "Current Location"
-        
-        if let location = sourcePlacemark.location {
-            sourceAnnotation.coordinate = location.coordinate
-        }
-        
-        let destinationAnnotation = customPin()
-        destinationAnnotation.title = currentCompany?.BusinessName
-        destinationAnnotation.subtitle = currentCompany?.AddressLine2
-        destinationAnnotation.image = UIImage(named: "foodIcon")
-        sourceAnnotation.image = UIImage(named: "personResized1")
-        if let location = destinationPlacemark.location {
-            destinationAnnotation.coordinate = location.coordinate
-        }
-        
-        self.myDetailsMapView.showAnnotations([sourceAnnotation, destinationAnnotation], animated: true)
-        
-        let directionRequest = MKDirectionsRequest()
-        directionRequest.source = sourceMapItem
-        directionRequest.destination = destinationMapItem
-        directionRequest.transportType = .automobile
-        
-        let directions = MKDirections(request: directionRequest)
-        
-        directions.calculate {
-            (response, error) -> Void in
-            guard let response = response else {
-                if let error = error {
-                    print("Error: \(error)")
-                }
-                return
+        if(comingFromSearch == 0) {
+            var companyLat: Double // get the coordinates of company that is being displayed
+            var companyLong: Double
+            let latString: String = (currentCompany?.Latitude)!
+            let longString: String = (currentCompany?.Longitude)!
+            companyLat = (Double(latString)!)
+            companyLong = (Double(longString)!)
+            
+            let sourceLat = (Double(personLatitude)!)
+            let sourceLong = (Double(personLongitude)!)
+
+            
+            let sourceLocation = CLLocationCoordinate2D(latitude: sourceLat, longitude: sourceLong)
+            let desinationLocation = CLLocationCoordinate2D(latitude: companyLat, longitude: companyLong)
+            
+            let sourcePlacemark = MKPlacemark(coordinate: sourceLocation, addressDictionary: nil)
+            let destinationPlacemark = MKPlacemark(coordinate: desinationLocation, addressDictionary: nil)
+            
+            let sourceMapItem = MKMapItem(placemark: sourcePlacemark)
+            let destinationMapItem = MKMapItem(placemark: destinationPlacemark)
+            
+            let sourceAnnotation = customPin()
+            sourceAnnotation.title = "Current Location"
+            
+            if let location = sourcePlacemark.location {
+                sourceAnnotation.coordinate = location.coordinate
             }
-            let route = response.routes[0]
-            self.myDetailsMapView.add((route.polyline), level: MKOverlayLevel.aboveRoads)
-            let rect = route.polyline.boundingMapRect
-            self.myDetailsMapView.setRegion(MKCoordinateRegionForMapRect(rect), animated: true)
+            
+            let destinationAnnotation = customPin()
+            destinationAnnotation.title = currentCompany?.BusinessName
+            destinationAnnotation.subtitle = currentCompany?.AddressLine2
+            destinationAnnotation.image = UIImage(named: "foodIcon")
+            sourceAnnotation.image = UIImage(named: "personResized1")
+            if let location = destinationPlacemark.location {
+                destinationAnnotation.coordinate = location.coordinate
+            }
+            
+            self.myDetailsMapView.showAnnotations([sourceAnnotation, destinationAnnotation], animated: true)
+            
+            let directionRequest = MKDirectionsRequest()
+            directionRequest.source = sourceMapItem
+            directionRequest.destination = destinationMapItem
+            directionRequest.transportType = .automobile
+            
+            let directions = MKDirections(request: directionRequest)
+            
+            directions.calculate {
+                (response, error) -> Void in
+                guard let response = response else {
+                    if let error = error {
+                        print("Error: \(error)")
+                    }
+                    return
+                }
+                let route = response.routes[0]
+                self.myDetailsMapView.add((route.polyline), level: MKOverlayLevel.aboveRoads)
+                let rect = route.polyline.boundingMapRect
+                self.myDetailsMapView.setRegion(MKCoordinateRegionForMapRect(rect), animated: true)
+            }
+            let span :MKCoordinateSpan = MKCoordinateSpanMake(0.03,0.03)
+            let location :CLLocationCoordinate2D = CLLocationCoordinate2DMake(sourceLat, sourceLong)
+            let region :MKCoordinateRegion = MKCoordinateRegionMake(location,span)
+            myDetailsMapView.setRegion(region, animated: true)
+            myDetailsMapView.mapType = .standard
+            
+            
+            //showRouteOnMap(pickupCoordinate: annotation.coordinate, destinationCoordinate: annotation2.coordinate)
+            
+            companyName.text = currentCompany?.BusinessName // set the companyName LABEL to the string taken from the currentCompany object
+            var detailsOfCompany: String // declare the string to hold the details of the company
+            var distanceOfCompanyMINT: Double // SPECIAL CASE declare a double to store the distance in KM from user's current location, this has to be double as we are going to do some mathematical operations with this number to convert it from Kilometres to Metres. It cannot be a String if we want to perform these operations
+            let distOfCompany: String = (currentCompany?.DistanceKM)! // take the distance from the user's location from the object (this is in KM and a string so must be taken as such)
+            distanceOfCompanyMINT = (Double(distOfCompany)!) * 1000 // convert the value in KM to a double and multiply by 1000 to convert to metres
+            distanceOfCompanyMINT = truncateDouble(places: 2,Number: distanceOfCompanyMINT) // truncate the number to 2 decimal places (this is enough information for the user to accurate understand their distance from the eatery and is standard for showing distances in Metres)
+            let distOfCompanyFinalDouble: String = String(distanceOfCompanyMINT) // convert the final value of the distance in Metres back to String to be displayed on the label
+            detailsOfCompany = "" + (currentCompany?.AddressLine2)! + "\n" + (currentCompany?.AddressLine3)! + "\n\nRating: " + (currentCompany?.RatingValue)! + "\nThis establishment was last rated: " + (currentCompany?.RatingDate)! + "\n\nDistance: " // create the String using the information taken from the currentCompany object
+            detailsOfCompany = detailsOfCompany + distOfCompanyFinalDouble + "M" // add the distance in M finally to the string
+            companyDetails.text = detailsOfCompany // give the companyDetails LABEL this string containing all the company information that is relevant
+        } else {
+            let span :MKCoordinateSpan = MKCoordinateSpanMake(0.03,0.03)
+            var companyLat: Double // get the coordinates of company that is being displayed
+            var companyLong: Double
+            let latString: String = (currentCompanySearched?.Latitude)!
+            let longString: String = (currentCompanySearched?.Longitude)!
+            companyLat = (Double(latString)!)
+            companyLong = (Double(longString)!)
+            let location :CLLocationCoordinate2D = CLLocationCoordinate2DMake(companyLat, companyLong)
+            let region :MKCoordinateRegion = MKCoordinateRegionMake(location,span)
+
+            let annotation = customPin()
+            annotation.coordinate = location
+            annotation.title = "eatery"
+            annotation.image = UIImage(named: "foodIcon")
+            myDetailsMapView.addAnnotation(annotation)
+
+            myDetailsMapView.setRegion(region, animated: true)
+            myDetailsMapView.mapType = .standard
+            
+            
+            companyName.text = currentCompanySearched?.BusinessName // set the companyName LABEL to the string taken from the currentCompany object
+            var detailsOfCompany: String // declare the string to hold the details of the company
+            detailsOfCompany = "" + (currentCompanySearched?.AddressLine2)! +  "\n" + (currentCompanySearched?.AddressLine3)! + "\n\nRating: " + (currentCompanySearched?.RatingValue)! + "\nThis establishment was last rated: " + (currentCompanySearched?.RatingDate)!// create the String using the information taken from the currentCompany object
+            companyDetails.text = detailsOfCompany // give the companyDetails LABEL this string containing all the company information that is relevant
         }
-        let span :MKCoordinateSpan = MKCoordinateSpanMake(0.03,0.03)
-        let location :CLLocationCoordinate2D = CLLocationCoordinate2DMake(53.47212, -2.239928)
-        let region :MKCoordinateRegion = MKCoordinateRegionMake(location,span)
-        myDetailsMapView.setRegion(region, animated: true)
-        myDetailsMapView.mapType = .standard
-        
-        
-        //showRouteOnMap(pickupCoordinate: annotation.coordinate, destinationCoordinate: annotation2.coordinate)
-        
-        companyName.text = currentCompany?.BusinessName // set the companyName LABEL to the string taken from the currentCompany object
-        var detailsOfCompany: String // declare the string to hold the details of the company
-        var distanceOfCompanyMINT: Double // SPECIAL CASE declare a double to store the distance in KM from user's current location, this has to be double as we are going to do some mathematical operations with this number to convert it from Kilometres to Metres. It cannot be a String if we want to perform these operations
-        let distOfCompany: String = (currentCompany?.DistanceKM)! // take the distance from the user's location from the object (this is in KM and a string so must be taken as such)
-        distanceOfCompanyMINT = (Double(distOfCompany)!) * 1000 // convert the value in KM to a double and multiply by 1000 to convert to metres
-        distanceOfCompanyMINT = truncateDouble(places: 2,Number: distanceOfCompanyMINT) // truncate the number to 2 decimal places (this is enough information for the user to accurate understand their distance from the eatery and is standard for showing distances in Metres)
-        let distOfCompanyFinalDouble: String = String(distanceOfCompanyMINT) // convert the final value of the distance in Metres back to String to be displayed on the label
-        detailsOfCompany = "" + (currentCompany?.AddressLine2)! + "\n" + (currentCompany?.AddressLine3)! + "\n\nRating: " + (currentCompany?.RatingValue)! + "\nThis establishment was last rated: " + (currentCompany?.RatingDate)! + "\n\nDistance: " // create the String using the information taken from the currentCompany object
-        detailsOfCompany = detailsOfCompany + distOfCompanyFinalDouble + "M" // add the distance in M finally to the string
-        companyDetails.text = detailsOfCompany // give the companyDetails LABEL this string containing all the company information that is relevant
-        
     }
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard !annotation.isKind(of:MKUserLocation.self) else { return nil }

@@ -9,36 +9,25 @@
 import UIKit
 
 class SearchViewController: UIViewController {
-
+    @IBAction func searchButton(_ sender: Any) {
+        print("search")
+    }
     @IBOutlet weak var searchText: UITextField!
     @IBOutlet weak var segmentedSearch: UISegmentedControl!
-    @IBAction func searchButton(_ sender: Any) {
-        if(segmentedSearch.selectedSegmentIndex == 0) {
-            
-        } else if(segmentedSearch.selectedSegmentIndex == 1) {
-            
+    var urlOperation: String = ""
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) { // function for showing the details once a company is selected
+            if segue.identifier == "table" { // if this is a segue to details
+            let dvc = segue.destination as! SearchResultsViewController // set the destination to be SearchResultsViewController, which is the right controller for the following view
+                if(segmentedSearch.selectedSegmentIndex == 0) {
+                    urlOperation = "s_name"
+                } else if(segmentedSearch.selectedSegmentIndex == 1) {
+                    urlOperation = "s_postcode"
+                }
+                let searchTerms: String = (searchText.text)!
+                let escapedSearchTerms = searchTerms.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
+                dvc.urlOperation = urlOperation
+                dvc.searchTerms = escapedSearchTerms!
+                dvc.originalTerms = searchTerms
         }
     }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

@@ -13,6 +13,8 @@ import MapKit
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate {
     @IBOutlet weak var myTableView: UITableView! // IBOutlet for the tableView to interact via the code
     @IBOutlet weak var latLongLabel: UILabel! // IBOutlet to interact with the label via code
+    var lati: String = ""
+    var longi: String = ""
     let locationManager = CLLocationManager()
     var allBusinesses = [Company]() // Array to hold all the businesses returned by the server, these are saved as 'Company' objects (see "Company.swift" to view this object)
     
@@ -49,11 +51,16 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             if segue.identifier == "details" { // if this is a segue to details
                 let dvc = segue.destination as! CompanyDetailsViewController // set the destination to be CompanyDetailsViewController, which is the right controller for the following view
                 dvc.currentCompany = self.allBusinesses[i] // the currentCompany object (from CompanyDetailsViewController) is set to the Company object that has been selected in the tableView from the array
+                dvc.personLatitude = lati
+                dvc.personLongitude = longi
+                dvc.comingFromSearch = 0
             }
         }
         else if segue.identifier == "map" { // if it is the segue to the map
             print("map")
             let dvc = segue.destination as! MapDisplayViewController
+            dvc.personLatitude = lati
+            dvc.personLongitude = longi
             dvc.allEstablishMents = allBusinesses
             
         }
@@ -79,8 +86,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         let longitude = locationManager.location?.coordinate.longitude
         // show the latitude and longitude of current location to the user on the UILabel
         latLongLabel.text = "latitude: \(latitude!) \nlongitude: \(longitude!)"
-        print(latitude!)
-        print(longitude!)
+        let ltude = "\(String(describing: latitude))"
+        let lgitude = "\(String(describing: longitude))"
+        longi = lgitude
+        lati = ltude
         // REVERSE GEO-CODING
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(locationManager.location!, completionHandler: { (placemarks, error) in
@@ -116,13 +125,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             } catch let err {
                 print("error:", err)
             }
-            }.resume() // start the network call
-
-
+        }.resume() // start the network call
     }
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) { // on update location
         let latitude = locations[0].coordinate.latitude
         let longitude = locations[0].coordinate.longitude
+
          // latLongLabel.text = "latitude: \(latitude) \nlongitude \(longitude)"
         
         // REVERSE GEO-CODING
@@ -145,6 +153,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
         })
         let endURL = "lat=\(latitude)&long=\(longitude)"
+        let ltude = "\(latitude)"
+        let lgitude = "\(longitude)"
+        longi = lgitude
+        lati = ltude
         print(endURL)
         let url = URL(string: "http://radikaldesign.co.uk/sandbox/hygiene.php?op=s_loc&&" + endURL) // URL to get JSON data from
         print("data retrieved at:" + endURL)
@@ -160,9 +172,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             } catch let err {
                 print("error:", err)
             }
-            }.resume() // start the network call
-
+        }.resume() // start the network call
     }
-    
 }
 

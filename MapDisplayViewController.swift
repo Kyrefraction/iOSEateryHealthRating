@@ -11,12 +11,16 @@ import MapKit
 
 class MapDisplayViewController: UIViewController, MKMapViewDelegate {
     var allEstablishMents = [Company]()
+    var personLatitude: String = ""
+    var personLongitude: String = ""
     @IBOutlet weak var myMapDisplayMapView: MKMapView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        let sourceLat = (Double(personLatitude)!)
+        let sourceLong = (Double(personLongitude)!)
         myMapDisplayMapView.delegate = self
         let span :MKCoordinateSpan = MKCoordinateSpanMake(0.01,0.01)
-        let location :CLLocationCoordinate2D = CLLocationCoordinate2DMake(53.47212,-2.239928)
+        let location :CLLocationCoordinate2D = CLLocationCoordinate2DMake(sourceLat,sourceLong)
         let region :MKCoordinateRegion = MKCoordinateRegionMake(location, span)
         myMapDisplayMapView.setRegion(region, animated: true)
         myMapDisplayMapView.mapType = .standard
